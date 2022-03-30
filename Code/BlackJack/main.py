@@ -21,6 +21,7 @@ dealer_ace = 0
 blank_indicator = True
 dealer_extra_cards = []
 dealer_extra_cards_pos = []
+new_game_question = False
 def determine_card():
     global player_ace
     card = random.randint(1,13)
@@ -112,15 +113,23 @@ def buttons():
     screen.blit(double, (1050, 700))
 
 def check_mouse(x,y):
-    if (x >= 900) and (x <975) and (y >= 700):
-        decision = 'hit'
-    elif (x >= 975) and (x <1050) and (y >= 700):
-        decision = 'stand'
-    elif (x >= 1050) and (x <1200) and (y >= 700):
-        decision = 'double'
+    global new_game_question
+    if new_game_question == True:
+        print(f"x == {x}, y == {y}")
+        if (x >= 1100) and (x <1175) and (y <= 475) and (y >= 400):
+            print("made it")
+            decision = 'start new game'
+            return decision
     else:
-        decision = 'na'
-    return decision
+        if (x >= 900) and (x <975) and (y >= 700):
+            decision = 'hit'
+        elif (x >= 975) and (x <1050) and (y >= 700):
+            decision = 'stand'
+        elif (x >= 1050) and (x <1200) and (y >= 700):
+            decision = 'double'
+        else:
+            decision = 'na'
+        return decision
 
 def add_card(card):
     print(card)
@@ -152,11 +161,20 @@ def dealer_turn():
     player_ace = 0
     dealer_score += dealer_score_hidden
     blank_indicator = False
+
+def ask_to_play_again():
+    again = font.render("Deal Again?", True, (255,255,255))
+    screen.blit(again, (540,300))
+    new_game_button = pygame.image.load("play_again.png")
+    new_game_button = pygame.transform.scale(new_game_button, (75,75))
+    screen.blit(new_game_button, (1100, 400))
+
 def dealer_turn_finish():
     global dealer_score
     global dealer_extra_cards_pos
     global player_score
     global dealer_ace
+    global new_game_question
     for i in range(len(dealer_extra_cards)):
         screen.blit(dealer_extra_cards[i], dealer_extra_cards_pos[i])
     if dealer_score > 21:
@@ -165,6 +183,7 @@ def dealer_turn_finish():
             dealer_score -= 10
         winner = font.render("You Win", True, (255,255,255))
         screen.blit(winner, (540,350))
+        new_game_question = True
     elif dealer_score < 17:
         card, score = determine_card()
         if score == 11:
@@ -180,12 +199,15 @@ def dealer_turn_finish():
         if dealer_score > player_score:
             loser = font.render("You lose", True, (255,255,255))
             screen.blit(loser, (540,350))
+            new_game_question = True
         elif dealer_score < player_score:
             winner = font.render("You Win", True, (255,255,255))
             screen.blit(winner, (540,350))
+            new_game_question = True
         else:
             push = font.render("Push", True, (255,255,255))
             screen.blit(push, (540,350))
+            new_game_question = True
 
 def dealer_score_print():
     global dealer_score
@@ -193,13 +215,14 @@ def dealer_score_print():
     print_score = font.render("Dealer: " + str(dealer_score), True, (255,255,255))
     screen.blit(print_score, (500,10))
 def check_win():
+    global new_game_question
     global player_score
     global player_ace
     if player_score == 21:
         player_ace = 0
         winner = font.render("You Win", True, (255,255,255))
         screen.blit(winner, (540,350))
-        print("You win")
+        new_game_question = True
     elif player_score > 21:
         if player_ace > 0:
             player_ace = 0
@@ -207,7 +230,7 @@ def check_win():
         else:
             loser = font.render("Bust", True, (255,255,255))
             screen.blit(loser, (540,350))
-            print("You lose")
+            new_game_question = True
 pygame.init()
 screen = pygame.display.set_mode((1200,800))
 pygame.display.set_caption("Brayden's Blackjack")
@@ -236,6 +259,8 @@ while running:
     buttons()
     check_win()
     dealer_score_print()
+    if new_game_question:
+        ask_to_play_again()
     if blank_indicator == False:
         dealer_turn_finish()
     pygame.display.update()
