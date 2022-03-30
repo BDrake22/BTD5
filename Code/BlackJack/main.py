@@ -148,19 +148,24 @@ def dealer_turn():
     global dealer_score
     global dealer_score_hidden
     global blank_indicator
+    global player_ace
+    player_ace = 0
     dealer_score += dealer_score_hidden
     blank_indicator = False
 def dealer_turn_finish():
     global dealer_score
     global dealer_extra_cards_pos
     global player_score
+    global dealer_ace
     for i in range(len(dealer_extra_cards)):
         screen.blit(dealer_extra_cards[i], dealer_extra_cards_pos[i])
     if dealer_score > 21:
+        if dealer_ace > 0:
+            dealer_ace = 0
+            dealer_score -= 10
         winner = font.render("You Win", True, (255,255,255))
         screen.blit(winner, (540,350))
     elif dealer_score < 17:
-        global dealer_ace
         card, score = determine_card()
         if score == 11:
             dealer_ace+=1
