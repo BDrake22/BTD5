@@ -22,6 +22,44 @@ blank_indicator = True
 dealer_extra_cards = []
 dealer_extra_cards_pos = []
 new_game_question = False
+doubled_choice = False
+player_cards_num = 2
+show_blackjack = False
+def reset_game():
+    global new_player_card_pos
+    global new_dealer_card_pos
+    global cards_to_print
+    global cards_pos
+    global player_score
+    global dealer_score
+    global dealer_score_hidden
+    global player_ace
+    global dealer_ace
+    global blank_indicator
+    global dealer_extra_cards
+    global dealer_extra_cards_pos
+    global new_game_question
+    global ready_for_new_hand
+    global doubled_choice
+    global player_cards_num
+    global show_blackjack
+    new_player_card_pos = [550,450]
+    new_dealer_card_pos = [650,50]
+    cards_to_print = []
+    cards_pos = []
+    player_score = 0
+    dealer_score = 0
+    dealer_score_hidden = 0
+    player_ace = 0
+    dealer_ace = 0
+    blank_indicator = True
+    dealer_extra_cards = []
+    dealer_extra_cards_pos = []
+    new_game_question = False
+    ready_for_new_hand = True
+    doubled_choice = False
+    player_cards_num =2
+    show_blackjack = False
 def determine_card():
     global player_ace
     card = random.randint(1,13)
@@ -117,8 +155,7 @@ def check_mouse(x,y):
     if new_game_question == True:
         print(f"x == {x}, y == {y}")
         if (x >= 1100) and (x <1175) and (y <= 475) and (y >= 400):
-            print("made it")
-            decision = 'start new game'
+            decision = 'new game'
             return decision
     else:
         if (x >= 900) and (x <975) and (y >= 700):
@@ -131,12 +168,18 @@ def check_mouse(x,y):
             decision = 'na'
         return decision
 
+def show_blackjack_func():
+    dealer_turn()
+
+
 def add_card(card):
     print(card)
+    global player_cards_num
     card = pygame.image.load(card)
     card = pygame.transform.scale(card, (100,200))
     cards_to_print.append(card)
     cards_pos.append(new_player_card_pos.copy())
+    player_cards_num+=1
     new_player_card_pos[0] += 50
     new_player_card_pos[1] -= 50
 
@@ -144,6 +187,7 @@ def add_card(card):
 def new_card(action):
     global player_ace
     global player_score
+    global doubled_choice
     if action == 'hit':
         card, score = determine_card()
         if score == 11:
@@ -153,6 +197,23 @@ def new_card(action):
         return 'na'
     elif action == 'stand':
         dealer_turn()
+    elif action == 'double':
+        card, score = determine_card()
+        player_ace=0
+        player_score += score
+        add_card(card)
+        dealer_turn_double()
+        doubled_choice = True
+        return 'na'
+
+def dealer_turn_double():
+    global dealer_score
+    global dealer_score_hidden
+    global blank_indicator
+    global player_ace
+    player_ace = 0
+    dealer_score += dealer_score_hidden
+    blank_indicator = False
 def dealer_turn():
     global dealer_score
     global dealer_score_hidden
@@ -175,6 +236,7 @@ def dealer_turn_finish():
     global player_score
     global dealer_ace
     global new_game_question
+    global blank_indicator
     for i in range(len(dealer_extra_cards)):
         screen.blit(dealer_extra_cards[i], dealer_extra_cards_pos[i])
     if dealer_score > 21:
@@ -218,11 +280,14 @@ def check_win():
     global new_game_question
     global player_score
     global player_ace
-    if player_score == 21:
+    global player_cards_num
+    global show_blackjack
+    if (player_score == 21) and (player_cards_num == 2):
         player_ace = 0
-        winner = font.render("You Win", True, (255,255,255))
+        winner = font.render("Blackjack", True, (255,255,255))
         screen.blit(winner, (540,350))
         new_game_question = True
+        show_blackjack = True
     elif player_score > 21:
         if player_ace > 0:
             player_ace = 0
@@ -231,6 +296,8 @@ def check_win():
             loser = font.render("Bust", True, (255,255,255))
             screen.blit(loser, (540,350))
             new_game_question = True
+
+
 pygame.init()
 screen = pygame.display.set_mode((1200,800))
 pygame.display.set_caption("Brayden's Blackjack")
@@ -250,7 +317,11 @@ while running:
             mouse_y = mouse_pos[1]
             action = check_mouse(mouse_x, mouse_y)
             print(action)
-        if action != 'na':
+        if action == 'new game':
+            print("resetting game")
+            reset_game()
+            action = 'na'
+        elif action != 'na':
             action = new_card(action)
     if ready_for_new_hand == True:
         ready_for_new_hand = start()
@@ -261,6 +332,10 @@ while running:
     dealer_score_print()
     if new_game_question:
         ask_to_play_again()
-    if blank_indicator == False:
+    if doubled_choice == True:
+        dealer_turn_double()
+    elif (blank_indicator == False) and (show_blackjack == False):
         dealer_turn_finish()
+    if show_blackjack == True:
+        show_blackjack_func()
     pygame.display.update()

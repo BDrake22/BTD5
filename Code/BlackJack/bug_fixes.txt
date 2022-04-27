@@ -1,0 +1,11 @@
+Dealer Ace on stand doesnt -10 if bust
+
+possibly make cards come out slower
+
+doesnt show dealer card on bust
+
+blackjack functionality
+
+insurance options
+
+double down button
